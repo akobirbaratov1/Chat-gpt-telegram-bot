@@ -26,22 +26,22 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 
 if not OPENAI_API_KEY:
-    logger.error("OPENAI_API_KEY .env faylida topilmadi!")
-    raise ValueError("OPENAI_API_KEY .env faylida topilmadi!")
+    logger.error("OPENAI_API_KEY not found in .env file!")
+    raise ValueError("OPENAI_API_KEY not found in .env file!")
 if not TELEGRAM_TOKEN:
-    logger.error("TELEGRAM_TOKEN .env faylida topilmadi!")
-    raise ValueError("TELEGRAM_TOKEN .env faylida topilmadi!")
+    logger.error("TELEGRAM_TOKEN not found in .env file!")
+    raise ValueError("TELEGRAM_TOKEN not found in .env file!")
 if not ADMIN_CHAT_ID:
-    logger.error("ADMIN_CHAT_ID .env faylida topilmadi!")
-    raise ValueError("ADMIN_CHAT_ID .env faylida topilmadi!")
+    logger.error("ADMIN_CHAT_ID not found in .env file!")
+    raise ValueError("ADMIN_CHAT_ID not found in .env file!")
 
-masked_token = TELEGRAM_TOKEN[:8] + "..." + TELEGRAM_TOKEN[-4:] if TELEGRAM_TOKEN else "yo‘q"
-logger.info(f"TELEGRAM_TOKEN o‘qildi: {masked_token}")
+masked_token = TELEGRAM_TOKEN[:8] + "..." + TELEGRAM_TOKEN[-4:] if TELEGRAM_TOKEN else "None"
+logger.info(f"TELEGRAM_TOKEN loaded: {masked_token}")
 
 try:
     client = OpenAI(api_key=OPENAI_API_KEY)
 except Exception as e:
-    logger.error(f"OpenAI mijozini sozlashda xatolik: {str(e)}")
+    logger.error(f"Error setting up OpenAI client: {str(e)}")
     raise
 
 chat_histories: Dict[int, List[Dict[str, str]]] = {}
@@ -49,31 +49,31 @@ user_profiles: Dict[int, Dict[str, str]] = {}
 stats = {"requests": 0, "errors": 0}
 MAX_HISTORY_LENGTH = 10  
 
-reply_keyboard = [[KeyboardButton("Yangi chat boshlash")]]
+reply_keyboard = [[KeyboardButton("Start new chat")]]
 markup = ReplyKeyboardMarkup(reply_keyboard, resize_keyboard=True)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Botni boshlash funksiyasi."""
+    """Function to start the bot."""
     try:
         chat_id = update.effective_chat.id
-        user_name = update.effective_user.first_name or "Foydalanuvchi"
-        chat_histories[chat_id] = [{"role": "system", "content": f"Siz do‘stona AI yordamchisiz. Foydalanuvchi {user_name} ga o‘zbek tilida javob bering."}]
+        user_name = update.effective_user.first_name or "User"
+        chat_histories[chat_id] = [{"role": "system", "content": f"You are a friendly AI assistant. Please respond to the user {user_name} in English."}]
         user_profiles[chat_id] = {"name": user_name, "requests": 0}
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Salom, {user_name}! Men sizga yordam berishga tayyorman. Nima haqida gaplashamiz? 😊",
+            text=f"Hello, {user_name}! I am ready to help you. What shall we talk about? 😊",
             parse_mode='Markdown',
             reply_markup=markup
         )
-        logger.info(f"Chat {chat_id} uchun yangi sessiya boshlandi. Foydalanuvchi: {user_name}")
+        logger.info(f"New session started for chat {chat_id}. User: {user_name}")
     except Exception as e:
         stats["errors"] += 1
-        logger.error(f"Start funksiyasida xatolik: {str(e)}")
-        await context.bot.send_message(chat_id=chat_id, text="Kechirasiz, xatolik yuz berdi. Iltimos, qayta urinib ko‘ring! 😔", parse_mode='Markdown')
+        logger.error(f"Error in start function: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text="Sorry, an error occurred. Please try again! 😔", parse_mode='Markdown')
 
 @lru_cache(maxsize=200)
 def get_openai_response(chat_id: int, message: str) -> str:
-    """OpenAI dan javob olish funksiyasi."""
+    """Function to get a response from OpenAI."""
     try:
         chat_histories[chat_id].append({"role": "user", "content": message})
         if len(chat_histories[chat_id]) > MAX_HISTORY_LENGTH:
@@ -91,32 +91,32 @@ def get_openai_response(chat_id: int, message: str) -> str:
         return ai_response
     except Exception as e:
         stats["errors"] += 1
-        logger.error(f"OpenAI javob olishda xatolik: {str(e)}")
+        logger.error(f"Error getting response from OpenAI: {str(e)}")
         if "rate limit" in str(e).lower():
-            return "Hozir so‘rovlar chegarasi oshdi, biroz kuting va qayta urinib ko‘ring! 😅"
-        return f"Kechirasiz, xatolik yuz berdi: {str(e)}. Iltimos, qayta urinib ko‘ring!"
+            return "The request limit has been exceeded, please wait a bit and try again! 😅"
+        return f"Sorry, an error occurred: {str(e)}. Please try again!"
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Matnli xabarlarni qayta ishlash funksiyasi."""
+    """Function to process text messages."""
     try:
         chat_id = update.effective_chat.id
         user_message = update.message.text
         stats["requests"] += 1
 
-        if user_message == "Yangi chat boshlash":
+        if user_message == "Start new chat":
             await new_chat(update, context)
             return
 
         if chat_id not in chat_histories:
-            user_name = update.effective_user.first_name or "Foydalanuvchi"
-            chat_histories[chat_id] = [{"role": "system", "content": f"Siz do‘stona AI yordamchisiz. Foydalanuvchi {user_name} ga o‘zbek tilida javob bering."}]
+            user_name = update.effective_user.first_name or "User"
+            chat_histories[chat_id] = [{"role": "system", "content": f"You are a friendly AI assistant. Please respond to the user {user_name} in English."}]
             user_profiles[chat_id] = {"name": user_name, "requests": 0}
 
         user_profiles[chat_id]["requests"] += 1
 
         loading_message = await context.bot.send_message(
             chat_id=chat_id,
-            text="Javob tayyorlanmoqda... ⏳",
+            text="Preparing response... ⏳",
             parse_mode='Markdown'
         )
 
@@ -130,64 +130,64 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             parse_mode='Markdown',
             reply_markup=markup
         )
-        logger.info(f"Chat {chat_id} uchun matnli so‘rov: {user_message}")
+        logger.info(f"Text request for chat {chat_id}: {user_message}")
     except Exception as e:
         stats["errors"] += 1
-        logger.error(f"Matnli xabarni qayta ishlashda xatolik: {str(e)}")
-        await context.bot.send_message(chat_id=chat_id, text="Xabarni qayta ishlashda xatolik yuz berdi. Iltimos, qayta urinib ko‘ring! 😔", parse_mode='Markdown')
+        logger.error(f"Error processing text message: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text="An error occurred while processing the message. Please try again! 😔", parse_mode='Markdown')
 
 async def new_chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Yangi chat boshlash funksiyasi."""
+    """Function to start a new chat."""
     try:
         chat_id = update.effective_chat.id
-        user_name = user_profiles.get(chat_id, {}).get("name", "Foydalanuvchi")
-        chat_histories[chat_id] = [{"role": "system", "content": f"Siz do‘stona AI yordamchisiz. Foydalanuvchi {user_name} ga o‘zbek tilida javob bering."}]
+        user_name = user_profiles.get(chat_id, {}).get("name", "User")
+        chat_histories[chat_id] = [{"role": "system", "content": f"You are a friendly AI assistant. Please respond to the user {user_name} in English."}]
         await context.bot.send_message(
             chat_id=chat_id,
-            text="Yangi chat boshlandi! Endi yangi savollaringizni kutaman. 😊",
+            text="New chat started! I'm waiting for your new questions. 😊",
             parse_mode='Markdown',
             reply_markup=markup
         )
-        logger.info(f"Chat {chat_id} uchun yangi chat boshlandi.")
+        logger.info(f"New chat started for chat {chat_id}.")
     except Exception as e:
         stats["errors"] += 1
-        logger.error(f"Yangi chat boshlashda xatolik: {str(e)}")
-        await context.bot.send_message(chat_id=chat_id, text="Yangi chat boshlashda xatolik yuz berdi. Iltimos, qayta urinib ko‘ring! 😔", parse_mode='Markdown')
+        logger.error(f"Error starting new chat: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text="An error occurred while starting a new chat. Please try again! 😔", parse_mode='Markdown')
 
 async def get_stats(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Statistikani ko‘rsatish funksiyasi."""
+    """Function to show statistics."""
     try:
         chat_id = update.effective_chat.id
         await context.bot.send_message(
             chat_id=chat_id,
-            text=f"Statistika:\n- So‘rovlar: {stats['requests']}\n- Xatolar: {stats['errors']}",
+            text=f"Statistics:\n- Requests: {stats['requests']}\n- Errors: {stats['errors']}",
             parse_mode='Markdown',
             reply_markup=markup
         )
-        logger.info(f"Chat {chat_id} uchun statistika so‘raldi.")
+        logger.info(f"Statistics requested for chat {chat_id}.")
     except Exception as e:
         stats["errors"] += 1
-        logger.error(f"Statistikani ko‘rsatishda xatolik: {str(e)}")
-        await context.bot.send_message(chat_id=chat_id, text="Statistikani ko‘rsatishda xatolik yuz berdi. Iltimos, qayta urinib ko‘ring! 😔", parse_mode='Markdown')
+        logger.error(f"Error showing statistics: {str(e)}")
+        await context.bot.send_message(chat_id=chat_id, text="An error occurred while showing statistics. Please try again! 😔", parse_mode='Markdown')
 
 async def send_status_report(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Botning holati haqida admin ga xabar yuborish."""
+    """Send status report about the bot to the admin."""
     admin_chat_id = ADMIN_CHAT_ID
     status_message = (
-        f"Bot holati:\n"
-        f"- Ishlayapti: {app.running}\n"
-        f"- So‘rovlar: {stats['requests']}\n"
-        f"- Xatolar: {stats['errors']}\n"
-        f"- Log fayl hajmi: {os.path.getsize('bot.log') / (1024 * 1024):.2f} MB"
+        f"Bot Status:\n"
+        f"- Running: {app.running}\n"
+        f"- Requests: {stats['requests']}\n"
+        f"- Errors: {stats['errors']}\n"
+        f"- Log file size: {os.path.getsize('bot.log') / (1024 * 1024):.2f} MB"
     )
     try:
         await context.bot.send_message(chat_id=admin_chat_id, text=status_message, parse_mode='Markdown')
-        logger.info("Admin ga holat xabari yuborildi.")
+        logger.info("Status report sent to admin.")
     except Exception as e:
-        logger.error(f"Admin ga xabar yuborishda xatolik: {str(e)}")
+        logger.error(f"Error sending message to admin: {str(e)}")
 
 def clean_log_file():
-    """Log fayl hajmi 10 MB dan oshsa, eski qismlarni tozalash."""
+    """If log file size exceeds 10 MB, clear the older parts."""
     log_file = "bot.log"
     max_size_mb = 10
     try:
@@ -200,12 +200,12 @@ def clean_log_file():
                 new_lines = lines[len(lines) // 2:]
                 with open(log_file, "w", encoding="utf-8") as f:
                     f.writelines(new_lines)
-                logger.info(f"Log fayl tozalandi. Yangi hajm: {os.path.getsize(log_file) / (1024 * 1024):.2f} MB")
+                logger.info(f"Log file cleaned. New size: {os.path.getsize(log_file) / (1024 * 1024):.2f} MB")
     except Exception as e:
-        logger.error(f"Log faylni tozalashda xatolik: {str(e)}")
+        logger.error(f"Error cleaning log file: {str(e)}")
 
 async def check_log_size(context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Har kuni log fayl hajmini tekshirish."""
+    """Check log file size daily."""
     clean_log_file()
 
 if __name__ == "__main__":
@@ -222,8 +222,8 @@ if __name__ == "__main__":
         app.job_queue.run_daily(send_status_report, time(hour=21, minute=0, tzinfo=pytz.timezone("Asia/Tashkent")))
         app.job_queue.run_daily(check_log_size, time(hour=0, minute=0, tzinfo=pytz.timezone("Asia/Tashkent")))
 
-        logger.info("Bot ishga tushdi...")
+        logger.info("Bot started...")
         app.run_polling()
     except Exception as e:
-        logger.error(f"Botni ishga tushirishda xatolik: {str(e)}")
+        logger.error(f"Error starting the bot: {str(e)}")
         sys.exit(1)
