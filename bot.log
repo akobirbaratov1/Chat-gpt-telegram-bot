@@ -499,3 +499,23 @@
 2026-07-03 01:33:38,656 - telegram.ext.Application - INFO - Application is stopping. This might take a moment.
 2026-07-03 01:33:38,657 - apscheduler.scheduler - INFO - Scheduler has been shut down
 2026-07-03 01:33:38,667 - telegram.ext.Application - INFO - Application.stop() complete
+2026-07-03 01:39:52,929 - __main__ - INFO - TELEGRAM_TOKEN yuklandi: 85069688...2AaU
+2026-07-03 01:39:52,983 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-03 01:39:52,983 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-07-03 01:39:52,983 - __main__ - INFO - Bot ishga tushdi (polling rejimi)...
+2026-07-03 01:39:53,531 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/getMe "HTTP/1.1 200 OK"
+2026-07-03 01:39:53,662 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/deleteWebhook "HTTP/1.1 200 OK"
+2026-07-03 01:39:53,664 - apscheduler.scheduler - INFO - Added job "send_status_report" to job store "default"
+2026-07-03 01:39:53,665 - apscheduler.scheduler - INFO - Added job "send_status_report" to job store "default"
+2026-07-03 01:39:53,665 - apscheduler.scheduler - INFO - Scheduler started
+2026-07-03 01:39:53,665 - telegram.ext.Application - INFO - Application started
+2026-07-03 01:39:54,252 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/getUpdates "HTTP/1.1 200 OK"
+2026-07-03 01:39:54,404 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/sendMessage "HTTP/1.1 200 OK"
+2026-07-03 01:39:55,571 - httpx - INFO - HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-07-03 01:39:55,722 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/deleteMessage "HTTP/1.1 200 OK"
+2026-07-03 01:39:55,890 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/sendMessage "HTTP/1.1 200 OK"
+2026-07-03 01:39:55,891 - __main__ - INFO - Matnli so'rov: chat=8321885882, xabar=Qushiq aytib ber
+2026-07-03 01:40:03,023 - httpx - INFO - HTTP Request: POST https://api.telegram.org/bot8506968806:AAEGl9WFF05lxmlDD0O_0JXq58KowSS2AaU/getUpdates "HTTP/1.1 200 OK"
+2026-07-03 01:40:03,024 - telegram.ext.Application - INFO - Application is stopping. This might take a moment.
+2026-07-03 01:40:03,024 - apscheduler.scheduler - INFO - Scheduler has been shut down
+2026-07-03 01:40:03,034 - telegram.ext.Application - INFO - Application.stop() complete

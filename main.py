@@ -13,7 +13,7 @@ from datetime import time
 
 load_dotenv()
 
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL") or os.getenv("RENDER_EXTERNAL_URL")
 IS_WEBHOOK = bool(WEBHOOK_URL)
 
 log_handlers = [logging.StreamHandler(sys.stdout)]
